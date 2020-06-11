@@ -30,6 +30,7 @@ class GattoolConnection(Connection):
             devices = adapter.scan(1)
             log.debug("Devices: %s", devices)
 
+			# Pass each device found to _is_device_matched( ) to see if it the device we want
             for dev in devices:
                 address = dev['address']
                 name = dev['name']
