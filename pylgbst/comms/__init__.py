@@ -47,20 +47,26 @@ class Connection(object):
     def enable_notifications(self):
         self.write(ENABLE_NOTIFICATIONS_HANDLE, ENABLE_NOTIFICATIONS_VALUE)
 
-    def _is_device_matched(self, address, name, hub_mac):
+    def _is_device_matched(self, address, name, hub_mac, hub_type=None):
         log.debug("Checking device name: %s, MAC: %s", name, address)
+        print("Checking device name: %s, MAC: %s" % (name, address))
         matched = False
-        if address != "00:00:00:00:00:00":
-            if hub_mac:
-                if hub_mac.lower() == address.lower():
-                    matched = True
-            elif name == LEGO_MOVE_HUB:
+        # First test the MAC
+        if address != "00:00:00:00:00:00" and hub_mac:
+            if hub_mac.lower() == address.lower():
+                matched = True
+        # Then test hub_type
+        elif hub_type == name:
+            matched = True
+        # Else any supported Lego hub will do
+        else:
+            if name == LEGO_MOVE_HUB:
                 matched = True
             elif name == LEGO_TRAIN_HUB:
                 matched = True
 
-            if matched:
-                log.info("Found %s at %s", name, address)
+        if matched:
+            log.info("Found %s at %s", name, address)
 
         return matched
 

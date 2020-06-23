@@ -20,7 +20,7 @@ class GattoolConnection(Connection):
         self.backend = lambda: pygatt.GATTToolBackend(hci_device=controller)
         self._conn_hnd = None
 
-    def connect(self, hub_mac=None):
+    def connect(self, hub_mac=None, hub_type=None):
         log.debug("Trying to connect client to MoveHub with MAC: %s", hub_mac)
         adapter = self.backend()
         adapter.start()
@@ -30,11 +30,11 @@ class GattoolConnection(Connection):
             devices = adapter.scan(1)
             log.debug("Devices: %s", devices)
 
-			# Pass each device found to _is_device_matched( ) to see if it the device we want
+            # Pass each device found to _is_device_matched( ) to see if it the device we want
             for dev in devices:
                 address = dev['address']
                 name = dev['name']
-                if self._is_device_matched(address, name, hub_mac):
+                if self._is_device_matched(address, name, hub_mac, hub_type):
                     self._conn_hnd = adapter.connect(address)
                     break
 

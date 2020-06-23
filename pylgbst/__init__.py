@@ -6,38 +6,38 @@ from pylgbst.comms import DebugServer
 log = logging.getLogger('pylgbst')
 
 
-def get_connection_bluegiga(controller=None, hub_mac=None):
+def get_connection_bluegiga(controller=None, hub_mac=None, hub_type=None):
     del controller  # to prevent code analysis warning
     from pylgbst.comms.cpygatt import BlueGigaConnection
 
-    return BlueGigaConnection().connect(hub_mac)
+    return BlueGigaConnection().connect(hub_mac, hub_type)
 
 
-def get_connection_gattool(controller='hci0', hub_mac=None):
+def get_connection_gattool(controller='hci0', hub_mac=None, hub_type=None):
     from pylgbst.comms.cpygatt import GattoolConnection
 
-    return GattoolConnection(controller).connect(hub_mac)
+    return GattoolConnection(controller).connect(hub_mac, hub_type)
 
 
-def get_connection_gatt(controller='hci0', hub_mac=None):
+def get_connection_gatt(controller='hci0', hub_mac=None, hub_type=None):
     from pylgbst.comms.cgatt import GattConnection
 
-    return GattConnection(controller).connect(hub_mac)
+    return GattConnection(controller).connect(hub_mac, hub_type)
 
 
-def get_connection_gattlib(controller='hci0', hub_mac=None):
+def get_connection_gattlib(controller='hci0', hub_mac=None, hub_type=None):
     from pylgbst.comms.cgattlib import GattLibConnection
 
-    return GattLibConnection(controller).connect(hub_mac)
+    return GattLibConnection(controller).connect(hub_mac, hub_type)
 
 
-def get_connection_bluepy(controller='hci0', hub_mac=None):
+def get_connection_bluepy(controller='hci0', hub_mac=None, hub_type=None):
     from pylgbst.comms.cbluepy import BluepyConnection
 
-    return BluepyConnection(controller).connect(hub_mac)
+    return BluepyConnection(controller).connect(hub_mac, hub_type)
 
 
-def get_connection_auto(controller='hci0', hub_mac=None):
+def get_connection_auto(controller='hci0', hub_mac=None, hub_type=None):
     fns = [
         get_connection_bluepy,
         get_connection_bluegiga,
@@ -50,7 +50,7 @@ def get_connection_auto(controller='hci0', hub_mac=None):
     for fn in fns:
         try:
             logging.info("Trying %s", fn.__name__)
-            return fn(controller, hub_mac)
+            return fn(controller, hub_mac, hub_type)
         except KeyboardInterrupt:
             raise
         except BaseException:
