@@ -198,7 +198,7 @@ class MoveHub(Hub):
     # noinspection PyTypeChecker
     def __init__(self, connection=None):
         if connection is None:
-            connection = get_connection_auto(hub_name="LEGO Move Hub")
+            connection = get_connection_auto(hub_name=LEGO_MOVE_HUB)
 
         super(MoveHub, self).__init__(connection)
         self.info = {}
@@ -302,7 +302,7 @@ class TrainHub(Hub):
     
     def __init__(self, connection=None):
         if connection is None:
-            connection = get_connection_auto(hub_name='TrainHub')
+            connection = get_connection_auto(hub_name=LEGO_TRAIN_HUB)
         super(TrainHub, self).__init__(connection)
         self.info = {}
         
