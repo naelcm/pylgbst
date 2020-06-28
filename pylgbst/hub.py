@@ -304,6 +304,7 @@ class TrainHub(Hub):
         if connection is None:
             connection = get_connection_auto(hub_name='TrainHub')
         super(TrainHub, self).__init__(connection)
+        self.info = {}
         
         # shorthand fields
         self.button = Button(self)
