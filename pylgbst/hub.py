@@ -4,8 +4,8 @@ import time
 from pylgbst import get_connection_auto
 from pylgbst.messages import *
 from pylgbst.peripherals import *
-from pylgbst.utilities import str2hex, usbyte, ushort
 from pylgbst.utilities import queue
+from pylgbst.utilities import str2hex, usbyte, ushort
 
 log = logging.getLogger('hub')
 
@@ -43,7 +43,7 @@ class Hub(object):
         self.add_message_handler(MsgHubAction, self._handle_action)
 
         if not connection:
-            connection = get_connection_auto()
+            connection = get_connection_auto()  # TODO: how to identify the hub?
         self.connection = connection
         self.connection.set_notify_handler(self._notify)
         self.connection.enable_notifications()
@@ -197,6 +197,9 @@ class MoveHub(Hub):
 
     # noinspection PyTypeChecker
     def __init__(self, connection=None):
+        if connection is None:
+            connection = get_connection_auto(hub_name="LEGO Move Hub")
+
         super(MoveHub, self).__init__(connection)
         self.info = {}
 
@@ -273,92 +276,10 @@ class MoveHub(Hub):
                 self.vision_sensor = self.peripherals[port]
             elif type(self.peripherals[port]) == EncodedMotor and port not in (self.PORT_A, self.PORT_B, self.PORT_AB):
                 self.motor_external = self.peripherals[port]
-				
+
+
 class TrainHub(Hub):
-    """
-    Class implementing Lego TrainHub specifics
-
-    :type led: LEDRGB
-    :type button: Button
-    :type current: Current
-    :type voltage: Voltage
-    :type vision_sensor: pylgbst.peripherals.VisionSensor
-    :type port_A: Peripheral
-    :type port_B: Peripheral
-    :type motor_external: EncodedMotor
-    """
-
-    # PORTS
-    PORT_A = 0x00
-    PORT_B = 0x01
-    PORT_LED = 0x32
-    PORT_TILT_SENSOR = 0x3A
-    PORT_CURRENT = 0x3B
-    PORT_VOLTAGE = 0x3C
-
-    # noinspection PyTypeChecker
     def __init__(self, connection=None):
+        if connection is None:
+            connection = get_connection_auto(hub_name='TrainHub')
         super(TrainHub, self).__init__(connection)
-        self.info = {}
-
-        # shorthand fields
-        self.button = Button(self)
-        self.led = None
-        self.current = None
-        self.voltage = None
-        self.motor_A = None
-        self.motor_B = None
-        self.motor_AB = None
-        self.vision_sensor = None
-        self.motor_external = None
-
-        self._wait_for_devices()
-        self._report_status()
-
-    def _wait_for_devices(self, get_dev_set=None):
-        if not get_dev_set:
-            get_dev_set = lambda: (self.led, self.current, self.voltage)
-        for num in range(0, 100):
-            devices = get_dev_set()
-            if all(devices):
-                log.debug("All devices are present: %s", devices)
-                return
-            log.debug("Waiting for builtin devices to appear: %s", devices)
-            time.sleep(0.1)
-        log.warning("Got only these devices: %s", get_dev_set())
-
-    def _report_status(self):
-        # maybe add firmware version
-        name = self.send(MsgHubProperties(MsgHubProperties.ADVERTISE_NAME, MsgHubProperties.UPD_REQUEST))
-        mac = self.send(MsgHubProperties(MsgHubProperties.PRIMARY_MAC, MsgHubProperties.UPD_REQUEST))
-        log.info("%s on %s", name.payload, str2hex(mac.payload))
-
-        voltage = self.send(MsgHubProperties(MsgHubProperties.VOLTAGE_PERC, MsgHubProperties.UPD_REQUEST))
-        assert isinstance(voltage, MsgHubProperties)
-        log.info("Voltage: %s%%", usbyte(voltage.parameters, 0))
-
-        voltage = self.send(MsgHubAlert(MsgHubAlert.LOW_VOLTAGE, MsgHubAlert.UPD_REQUEST))
-        assert isinstance(voltage, MsgHubAlert)
-        if not voltage.is_ok():
-            log.warning("Low voltage, check power source (maybe replace battery)")
-
-    # noinspection PyTypeChecker
-    def _handle_device_change(self, msg):
-        super(TrainHub, self)._handle_device_change(msg)
-        if isinstance(msg, MsgHubAttachedIO) and msg.event != MsgHubAttachedIO.EVENT_DETACHED:
-            port = msg.port
-            if port == self.PORT_A:
-                self.port_A = self.peripherals[port]
-            elif port == self.PORT_B:
-                self.port_B = self.peripherals[port]
-            elif port == self.PORT_LED:
-                self.led = self.peripherals[port]
-            elif port == self.PORT_CURRENT:
-                self.current = self.peripherals[port]
-            elif port == self.PORT_VOLTAGE:
-                self.voltage = self.peripherals[port]
-
-            if type(self.peripherals[port]) == VisionSensor:
-                self.vision_sensor = self.peripherals[port]
-            elif type(self.peripherals[port]) == EncodedMotor:
-                self.motor_external = self.peripherals[port]

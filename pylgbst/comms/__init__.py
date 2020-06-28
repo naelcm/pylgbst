@@ -15,8 +15,6 @@ from pylgbst.utilities import str2hex
 
 log = logging.getLogger('comms')
 
-LEGO_MOVE_HUB = "LEGO Move Hub"
-LEGO_TRAIN_HUB = "TrainHub"
 MOVE_HUB_HW_UUID_SERV = '00001623-1212-efde-1623-785feabcd123'
 MOVE_HUB_HW_UUID_CHAR = '00001624-1212-efde-1623-785feabcd123'
 ENABLE_NOTIFICATIONS_HANDLE = 0x000f
@@ -47,26 +45,19 @@ class Connection(object):
     def enable_notifications(self):
         self.write(ENABLE_NOTIFICATIONS_HANDLE, ENABLE_NOTIFICATIONS_VALUE)
 
-    def _is_device_matched(self, address, name, hub_mac, hub_type=None):
-        log.debug("Checking device name: %s, MAC: %s", name, address)
-        print("Checking device name: %s, MAC: %s" % (name, address))
+    def _is_device_matched(self, address, dev_name, hub_mac, find_name):
+        assert hub_mac or find_name, 'You have to provide either hub_mac or hub_name in connection options'
+        log.debug("Checking device: %s, MAC: %s", dev_name, address)
         matched = False
-        # First test the MAC
-        if address != "00:00:00:00:00:00" and hub_mac:
-            if hub_mac.lower() == address.lower():
-                matched = True
-        # Then test hub_type
-        elif hub_type == name:
-            matched = True
-        # Else any supported Lego hub will do
-        else:
-            if name == LEGO_MOVE_HUB:
-                matched = True
-            elif name == LEGO_TRAIN_HUB:
+        if address != "00:00:00:00:00:00":
+            if hub_mac:
+                if hub_mac.lower() == address.lower():
+                    matched = True
+            elif dev_name == find_name:
                 matched = True
 
-        if matched:
-            log.info("Found %s at %s", name, address)
+            if matched:
+                log.info("Found %s at %s", dev_name, address)
 
         return matched
 
