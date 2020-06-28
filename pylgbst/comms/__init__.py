@@ -15,6 +15,8 @@ from pylgbst.utilities import str2hex
 
 log = logging.getLogger('comms')
 
+LEGO_MOVE_HUB = "LEGO Move Hub"
+LEGO_TRAIN_HUB = "TrainHub"
 MOVE_HUB_HW_UUID_SERV = '00001623-1212-efde-1623-785feabcd123'
 MOVE_HUB_HW_UUID_CHAR = '00001624-1212-efde-1623-785feabcd123'
 ENABLE_NOTIFICATIONS_HANDLE = 0x000f
