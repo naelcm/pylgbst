@@ -89,6 +89,8 @@ class Hub(object):
                     log.debug("Found matching upstream msg: %r", msg)
                     self._sync_replies.put(msg)
                     self._sync_request = None
+                else:
+                    log.debug("Message did not match")
 
         for msg_class, handler in self._msg_handlers:
             if isinstance(msg, msg_class):
@@ -313,7 +315,6 @@ class TrainHub(Hub):
         self.voltage = None
         self.motor_A = None # TODO
         self.motor_B = None # TODO
-        self.motor_AB = None # TODO
         self.vision_sensor = None
         self.motor_external = None
 
@@ -367,3 +368,32 @@ class TrainHub(Hub):
                 self.vision_sensor = self.peripherals[port]
             elif type(self.peripherals[port]) == EncodedMotor:
                 self.motor_external = self.peripherals[port]
+    
+    # The TrainHub sometimes returns a status byte of 0x2c
+    # This seems to happen when commanding a MoveToPosition before a current move is finished
+    # Over-riding the _notify function with this version is my ugly fix for this
+    # Otherwise we hang, waiting for a message which never comes
+    def _notify(self, handle, data):
+        log.debug("Notification on %s: %s", handle, str2hex(data))
+
+        msg = self._get_upstream_msg(data)
+        
+        # Cludge to stop it crashing
+        if hasattr(msg, 'status'):
+            if msg.status == 44:
+                msg.status = 10
+                log.debug("Set status to 10")
+
+        with self._sync_lock:
+            if self._sync_request:
+                if self._sync_request.is_reply(msg):
+                    log.debug("Found matching upstream msg: %r", msg)
+                    self._sync_replies.put(msg)
+                    self._sync_request = None
+                else:
+                    log.debug("Message did not match")
+
+        for msg_class, handler in self._msg_handlers:
+            if isinstance(msg, msg_class):
+                log.debug("Handling msg with %s: %r", handler, msg)
+                handler(msg)
